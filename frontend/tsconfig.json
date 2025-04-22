@@ -18,10 +18,15 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".", // Añadimos baseUrl para que las rutas paths sean relativas a la raíz
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/styles/*": ["./src/styles/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "./src/**/*"], // Añadimos "./src/**/*" para incluir todos los archivos dentro de src
   "exclude": ["node_modules"]
 }
