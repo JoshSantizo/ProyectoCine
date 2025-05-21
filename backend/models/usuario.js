@@ -1,21 +1,35 @@
-const pool = require('../config/db');
-const bcrypt = require('bcryptjs');
+// backend/models/usuario.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Importa la instancia de Sequelize
 
-async function crearUsuario(nombre, username, contrasena, tipo = 'cliente') {
-    const hashedPassword = await bcrypt.hash(contrasena, 10);
-    const [result] = await pool.query(
-        'INSERT INTO usuario (nombre, username, contrasena, tipo) VALUES (?, ?, ?, ?)',
-        [nombre, username, hashedPassword, tipo]
-    );
-    return result.insertId;
-}
+const Usuario = sequelize.define('Usuario', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+    },
+    nombre: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true // Asegura que los nombres de usuario sean únicos
+    },
+    contrasena: { // Almacenará el hash de la contraseña
+        type: DataTypes.STRING, 
+        allowNull: false
+    },
+    tipo: { // Para el ENUM('cliente', 'administrador')
+        type: DataTypes.ENUM('cliente', 'administrador'),
+        defaultValue: 'cliente',
+        allowNull: false
+    },
+}, {
+    tableName: 'usuario', // Mapea al nombre de tabla 'usuario' (singular)
+    timestamps: false     // Desactiva createdAt/updatedAt si tu tabla no los tiene
+});
 
-async function obtenerUsuarioPorUsername(username) {
-    const [rows] = await pool.query('SELECT * FROM usuario WHERE username = ?', [username]);
-    return rows[0];
-}
-
-module.exports = {
-    crearUsuario,
-    obtenerUsuarioPorUsername
-};
+module.exports = Usuario; // Exporta el modelo Usuario

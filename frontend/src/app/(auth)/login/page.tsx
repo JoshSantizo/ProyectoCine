@@ -1,20 +1,128 @@
-"use client";
+// src/app/(auth)/login/page.tsx
+'use client'; // Esto indica que el componente es un Client Component en Next.js 13+
 
-import LoginForm from '@/components/auth/LoginForm';
-import { Card } from '@/components/common';
-import Link from 'next/link';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Para la navegación programática
+import {
+    Container, Box, Typography, TextField, Button, Alert, CircularProgress, Link
+} from '@mui/material';
+import NextLink from 'next/link'; // Importar Link de next/link para usar con MUI Link
+import { useAuthContext } from '@/app/layout'; // Asegúrate de que esta ruta sea correcta
 
 const LoginPage = () => {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
-      <Card style={{ width: '400px' }}>
-        <LoginForm />
-        <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <Link href="/register">Crear cuenta</Link>
-        </p>
-      </Card>
-    </div>
-  );
+    const [username, setUsername] = useState('');
+    const [contrasena, setContrasena] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const router = useRouter(); // Inicializa el router
+    const { setToken, setUser } = useAuthContext(); // Obtener funciones del contexto de autenticación
+
+    const handleLogin = async (event: React.FormEvent) => {
+        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+
+        setError(null); // Limpiar errores previos
+        setLoading(true); // Indicar que la carga ha comenzado
+
+        try {
+            const response = await fetch('http://localhost:3001/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, contrasena }),
+            });
+
+            const data = await response.json(); // Parsear la respuesta JSON
+
+            if (!response.ok) {
+                // Si la respuesta no es OK (ej. 400, 401, 500), lanzar un error
+                throw new Error(data.mensaje || 'Error en el inicio de sesión');
+            }
+
+            // Si el inicio de sesión es exitoso, guardar el token y la información del usuario
+            setToken(data.token);
+            setUser({ id: data.userId, username: data.username, tipo: data.tipo });
+
+            // Redirigir al dashboard o a la página principal
+            router.push('/dashboard'); 
+
+        } catch (err: any) {
+            console.error('Error durante el inicio de sesión:', err);
+            setError(err.message || 'Error desconocido al iniciar sesión.');
+        } finally {
+            setLoading(false); // Indicar que la carga ha terminado
+        }
+    };
+
+    return (
+        <Container component="main" maxWidth="xs">
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: 4,
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: 'white'
+                }}
+            >
+                <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
+                    Iniciar Sesión
+                </Typography>
+                <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
+                    {error && <Alert severity="error" sx={{ mb: 2, width: '100%' }}>{error}</Alert>}
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="username"
+                        label="Nombre de Usuario"
+                        name="username"
+                        autoComplete="username"
+                        autoFocus
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={loading}
+                    />
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        name="password"
+                        label="Contraseña"
+                        type="password"
+                        id="password"
+                        autoComplete="current-password"
+                        value={contrasena}
+                        onChange={(e) => setContrasena(e.target.value)}
+                        disabled={loading}
+                    />
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                        disabled={loading}
+                    >
+                        {loading ? <CircularProgress size={24} /> : 'Iniciar Sesión'}
+                    </Button>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                        <Typography variant="body2">
+                            ¿No tienes cuenta?{' '}
+                            <NextLink href="/register" passHref legacyBehavior>
+                                <Link component="a" variant="body2">
+                                    Regístrate aquí
+                                </Link>
+                            </NextLink>
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+        </Container>
+    );
 };
 
 export default LoginPage;

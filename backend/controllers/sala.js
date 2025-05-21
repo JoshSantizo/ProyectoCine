@@ -1,71 +1,128 @@
-const salaModel = require('../models/sala');
+// backend/controllers/sala.js
+const Sala = require('../models/sala');     // Importa el modelo Sala de Sequelize
+const Pelicula = require('../models/pelicula'); // También necesitamos el modelo Pelicula para las inclusiones
 
-async function crearSala(req, res) {
-    try {
-        const { nombre, pelicula_id, filas, columnas } = req.body;
-        const salaId = await salaModel.crearSala(nombre, pelicula_id, filas, columnas);
-        res.status(201).json({ id: salaId, mensaje: 'Sala creada exitosamente' });
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error al crear la sala', error: error.message });
-    }
-}
+const salaController = {
+    // Obtener todas las salas con su película asociada
+    async getAllSalas(req, res) {
+        try {
+            const salas = await Sala.findAll({
+                include: [
+                    {
+                        model: Pelicula, // Incluye el modelo Pelicula
+                        as: 'pelicula', // Usa el alias 'pelicula' definido en la asociación (Sala.belongsTo)
+                        attributes: ['id', 'nombre', 'duracion', 'sinopsis', 'imagen'] // Selecciona solo los campos que necesitas de la película
+                    }
+                ]
+            });
+            res.status(200).json(salas);
+        } catch (error) {
+            console.error('Error al obtener todas las salas:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al obtener salas.' });
+        }
+    },
 
-async function obtenerSalas(req, res) {
-    try {
-        const salas = await salaModel.obtenerSalas();
-        res.status(200).json(salas);
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener las salas', error: error.message });
-    }
-}
+    // Obtener una sala por ID con su película asociada
+    async getSalaById(req, res) {
+        try {
+            const { id } = req.params;
+            const sala = await Sala.findByPk(id, {
+                include: [
+                    {
+                        model: Pelicula,
+                        as: 'pelicula',
+                        attributes: ['id', 'nombre', 'duracion', 'sinopsis', 'imagen']
+                    }
+                ]
+            });
 
-async function obtenerSalaPorId(req, res) {
-    try {
-        const { id } = req.params;
-        const sala = await salaModel.obtenerSalaPorId(id);
-        if (sala) {
+            if (!sala) {
+                return res.status(404).json({ mensaje: 'Sala no encontrada.' });
+            }
             res.status(200).json(sala);
-        } else {
-            res.status(404).json({ mensaje: 'Sala no encontrada' });
+        } catch (error) {
+            console.error('Error al obtener sala por ID:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor.' });
         }
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener la sala', error: error.message });
-    }
-}
+    },
 
-async function actualizarSala(req, res) {
-    try {
-        const { id } = req.params;
-        const { nombre, pelicula_id, filas, columnas } = req.body;
-        const actualizado = await salaModel.actualizarSala(id, nombre, pelicula_id, filas, columnas);
-        if (actualizado) {
-            res.status(200).json({ mensaje: 'Sala actualizada exitosamente' });
-        } else {
-            res.status(404).json({ mensaje: 'Sala no encontrada' });
+    // Crear una nueva sala
+    async createSala(req, res) {
+        try {
+            const { nombre, filas, columnas, pelicula_id } = req.body;
+
+            if (!nombre || !filas || !columnas) {
+                return res.status(400).json({ mensaje: 'Los campos nombre, filas y columnas son obligatorios.' });
+            }
+
+            // Opcional: Validar si la pelicula_id existe si se proporciona
+            if (pelicula_id) {
+                const pelicula = await Pelicula.findByPk(pelicula_id);
+                if (!pelicula) {
+                    return res.status(400).json({ mensaje: 'La película especificada no existe.' });
+                }
+            }
+
+            const nuevaSala = await Sala.create({ nombre, filas, columnas, pelicula_id });
+            res.status(201).json({ mensaje: 'Sala creada exitosamente.', sala: nuevaSala });
+        } catch (error) {
+            console.error('Error al crear sala:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al crear sala.' });
         }
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error al actualizar la sala', error: error.message });
-    }
-}
+    },
 
-async function eliminarSala(req, res) {
-    try {
-        const { id } = req.params;
-        const eliminado = await salaModel.eliminarSala(id);
-        if (eliminado) {
-            res.status(200).json({ mensaje: 'Sala eliminada exitosamente' });
-        } else {
-            res.status(404).json({ mensaje: 'Sala no encontrada' });
+    // Actualizar una sala existente
+    async updateSala(req, res) {
+        try {
+            const { id } = req.params;
+            const { nombre, filas, columnas, pelicula_id } = req.body;
+
+            const sala = await Sala.findByPk(id);
+            if (!sala) {
+                return res.status(404).json({ mensaje: 'Sala no encontrada.' });
+            }
+
+            // Opcional: Validar si la pelicula_id existe si se proporciona o si se desasigna (null)
+            if (pelicula_id !== undefined) {
+                if (pelicula_id !== null) { // Si no es null, debe existir
+                    const pelicula = await Pelicula.findByPk(pelicula_id);
+                    if (!pelicula) {
+                        return res.status(400).json({ mensaje: 'La película especificada no existe.' });
+                    }
+                }
+            }
+
+            // Actualiza los campos y guarda
+            sala.nombre = nombre !== undefined ? nombre : sala.nombre;
+            sala.filas = filas !== undefined ? filas : sala.filas;
+            sala.columnas = columnas !== undefined ? columnas : sala.columnas;
+            sala.pelicula_id = pelicula_id !== undefined ? pelicula_id : sala.pelicula_id;
+
+            await sala.save();
+
+            res.status(200).json({ mensaje: 'Sala actualizada exitosamente.', sala });
+        } catch (error) {
+            console.error('Error al actualizar sala:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al actualizar sala.' });
         }
-    } catch (error) {
-        res.status(500).json({ mensaje: 'Error al eliminar la sala', error: error.message });
-    }
-}
+    },
 
-module.exports = {
-    crearSala,
-    obtenerSalas,
-    obtenerSalaPorId,
-    actualizarSala,
-    eliminarSala
+    // Eliminar una sala
+    async deleteSala(req, res) {
+        try {
+            const { id } = req.params;
+            const resultado = await Sala.destroy({ where: { id } });
+
+            if (resultado === 0) {
+                return res.status(404).json({ mensaje: 'Sala no encontrada.' });
+            }
+            res.status(200).json({ mensaje: 'Sala eliminada exitosamente.' });
+        } catch (error) {
+            console.error('Error al eliminar sala:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al eliminar sala.' });
+        }
+    }
 };
+
+
+module.exports = salaController;

@@ -1,92 +1,99 @@
-"use client";
-
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+// src/hooks/useAuth.tsx
+import { useState, useEffect, useCallback } from 'react'; 
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { jwtDecode } from 'jwt-decode';
-import React from 'react'; // Asegúrate de tener esta importación
 
-interface User {
-  id_usuario: number;
-  nombre: string;
-  username: string;
-  tipo: 'cliente' | 'administrador';
-  // ... otros campos de tu usuario
-}
+const API_BASE_URL = 'http://localhost:3001'; 
 
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string } | undefined>;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
+const useAuth = () => {
+    const initialToken = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    const [token, setToken] = useState<string | null>(initialToken);
+    const [isLoggedIn, setIsLoggedIn] = useState(!!initialToken); 
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+    const router = useRouter();
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const router = useRouter();
+    // --- Definición de funciones de autenticación (useCallback) primero ---
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('authToken');
-    setToken(null);
-    setUser(null);
-    router.push('/login');
-  }, [router]);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      setToken(storedToken);
-      try {
-        const decodedToken = jwtDecode<any>(storedToken);
-        setUser(decodedToken.usuario);
-      } catch (error) {
-        console.error('Error al decodificar el token:', error);
-        logout();
-      }
-    }
-  }, [logout]);
-
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await api.post('/usuario/login', { username, contrasena: password });
-      if (response.data?.token) {
-        localStorage.setItem('authToken', response.data.token);
-        setToken(response.data.token);
+    const login = useCallback(async (username: string, contrasena: string) => { 
         try {
-          const decodedToken = jwtDecode<any>(response.data.token);
-          setUser(decodedToken.usuario);
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, contrasena }),
+            });
+
+            const data = await response.json(); 
+
+            if (response.ok) {
+                if (data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    setToken(data.token);
+                    setIsLoggedIn(true);
+                    return { success: true, message: data.mensaje || 'Inicio de sesión exitoso' };
+                } else {
+                    console.error('Login exitoso, pero el token no fue recibido.');
+                    return { success: false, message: 'Respuesta del servidor incompleta (token ausente).' };
+                }
+            } else {
+                const errorMessage = data.mensaje || 'Credenciales inválidas. Inténtalo de nuevo.';
+                console.error('Error en el login:', errorMessage);
+                return { success: false, message: errorMessage };
+            }
         } catch (error) {
-          console.error('Error al decodificar el token:', error);
+            console.error('Error de red o del servidor:', error);
+            return { success: false, message: 'Error de conexión. Inténtalo de nuevo.' };
         }
-        return { success: true };
-      } else if (response.data?.message) {
-        return { success: false, message: response.data.message };
-      } else {
-        return { success: false, message: 'Error desconocido al iniciar sesión.' };
-      }
-    } catch (error: any) {
-      console.error('Error al iniciar sesión:', error);
-      return { success: false, message: error?.response?.data?.message || 'Error al iniciar sesión.' };
-    }
-  };
+    }, []);
 
-  const isAuthenticated = !!token;
+    const register = useCallback(async (nombre: string, username: string, contrasena: string) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/auth/register`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, username, contrasena }),
+            });
 
-  return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
-  );
+            const data = await response.json();
+
+            if (response.ok) {
+                return { success: true, message: data.mensaje || 'Usuario registrado exitosamente' };
+            } else {
+                return { success: false, message: data.mensaje || 'Error al registrar el usuario.' };
+            }
+        } catch (error) {
+            console.error('Error de red o del servidor al registrar usuario:', error);
+            return { success: false, message: 'No se pudo conectar con el servidor. Inténtalo de nuevo más tarde.' };
+        }
+    }, []);
+
+    // La función logout se define ANTES del useEffect que la usa
+    const logout = useCallback(() => {
+        localStorage.removeItem('authToken'); 
+        setToken(null); 
+        setIsLoggedIn(false); 
+        router.push('/login');
+    }, [router]);
+
+    // --- Ahora el useEffect puede usar 'logout' sin problemas ---
+    useEffect(() => {
+        // Podrías añadir aquí lógica para verificar la validez/expiración del token
+        // si usas jwt-decode. Si el token es inválido/expirado, llamas a logout().
+        // Ejemplo (requiere jwt-decode):
+        // if (token) {
+        //     try {
+        //         const decodedToken: any = jwtDecode(token);
+        //         if (decodedToken.exp * 1000 < Date.now()) { // Token expirado
+        //             console.log('Token expirado. Cerrando sesión automáticamente.');
+        //             logout(); // Cierra sesión si el token está expirado
+        //         }
+        //     } catch (error) {
+        //         console.error('Error decodificando token:', error);
+        //         logout(); // Cierra sesión si el token es inválido
+        //     }
+        // }
+    }, [token, logout]); // 'logout' ahora está definida cuando se evalúa esta línea
+
+
+    return { isLoggedIn, login, logout, token, register };
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
-  }
-  return context;
-};
+export default useAuth;

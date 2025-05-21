@@ -1,42 +1,74 @@
-const usuarioModel = require('../models/usuario');
-const bcrypt = require('bcryptjs');
+// backend/controllers/usuario.js
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt'); 
+const Usuario = require('../models/usuario'); 
 
-async function registro(req, res) {
-    try {
-        const { nombre, username, contrasena } = req.body;
-        const usuarioId = await usuarioModel.crearUsuario(nombre, username, contrasena);
-        res.status(201).json({ mensaje: 'Usuario creado con éxito', id: usuarioId });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensaje: 'Error al crear el usuario' });
-    }
-}
+const JWT_SECRET = process.env.JWT_SECRET; // Asegúrate de que esto esté bien cargado desde .env
 
-async function login(req, res) {
-    try {
-        const { username, contrasena } = req.body;
-        const usuario = await usuarioModel.obtenerUsuarioPorUsername(username);
-        if (!usuario) {
-            return res.status(401).json({ mensaje: 'Credenciales inválidas' });
+const usuarioController = {
+    // Función para el login de usuarios
+    async loginUsuario(req, res) {
+        const { username, contrasena } = req.body; 
+
+        if (!username || !contrasena) {
+            // Este mensaje es para errores de entrada (body vacío), no para éxito
+            return res.status(400).json({ mensaje: 'Usuario y contraseña son requeridos.' });
         }
-        const contrasenaValida = await bcrypt.compare(contrasena, usuario.contrasena);
-        if (!contrasenaValida) {
-            return res.status(401).json({ mensaje: 'Credenciales inválidas' });
-        }
-        const token = jwt.sign(
-            { id: usuario.id, tipo: usuario.tipo },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-        res.status(200).json({ token });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensaje: 'Error al iniciar sesión' });
-    }
-}
 
-module.exports = {
-    registro,
-    login
+        try {
+            const user = await Usuario.findByUsername(username); 
+
+            if (!user) {
+                return res.status(401).json({ mensaje: 'Credenciales inválidas.' });
+            }
+
+            const isMatch = await bcrypt.compare(contrasena, user.contrasena);
+
+            if (!isMatch) {
+                return res.status(401).json({ mensaje: 'Credenciales inválidas.' });
+            }
+
+            // Generar el JWT
+            const payload = {
+                id: user.id, 
+                username: user.nombre_usuario // O 'username' si así se llama en tu DB
+            };
+            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); 
+
+            // ¡¡¡CAMBIO CLAVE AQUÍ!!!
+            // Solo devuelve el token en la respuesta exitosa
+            res.status(200).json({ token }); 
+
+        } catch (error) {
+            console.error('Error en loginUsuario:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al iniciar sesión.' });
+        }
+    },
+
+    // Función para registrar usuarios
+    async registerUsuario(req, res) {
+        const { username, contrasena, email } = req.body; 
+
+        if (!username || !contrasena || !email) {
+            return res.status(400).json({ mensaje: 'Todos los campos son requeridos.' });
+        }
+
+        try {
+            const existingUser = await Usuario.findByUsername(username); 
+            if (existingUser) {
+                return res.status(409).json({ mensaje: 'El nombre de usuario ya está registrado.' });
+            }
+
+            const hashedPassword = await bcrypt.hash(contrasena, 10); 
+
+            const newUser = await Usuario.create(username, hashedPassword, email); 
+
+            res.status(201).json({ mensaje: 'Usuario registrado con éxito', usuarioId: newUser.id });
+        } catch (error) {
+            console.error('Error al registrar usuario:', error);
+            res.status(500).json({ mensaje: 'Error interno del servidor al registrar el usuario.' });
+        }
+    }
 };
+
+module.exports = usuarioController; // Asegúrate de que este exportación sea correcta

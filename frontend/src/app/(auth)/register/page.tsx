@@ -1,94 +1,132 @@
 // src/app/(auth)/register/page.tsx
-"use client";
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { Card, Button, ErrorMessage, LoadingSpinner } from '@/components/common';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+  Alert
+} from '@mui/material';
+import Link from 'next/link';
 
 const RegisterPage = () => {
   const [nombre, setNombre] = useState('');
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [contrasena, setContrasena] = useState(''); // Cambiado de 'password' a 'contrasena' para consistencia
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (registrationSuccess) {
-      const timer = setTimeout(() => {
-        router.push('/login?registered=true');
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [registrationSuccess, router]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    console.log('handleSubmit llamado');
-    event.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      setIsLoading(false);
-      return;
-    }
-
+  const handleRegister = async () => {
+    setError('');
+    setLoading(true);
     try {
-      console.log('Datos a enviar:', { nombre, username, contrasena: password }); // <-- CORRECCIÓN AQUÍ
-      const response = await api.post('/usuario/registro', { nombre, username, contrasena: password });
-      console.log('Respuesta del servidor:', response);
-      if (response.status === 201 && response.data?.mensaje) {
-        setRegistrationSuccess(true);
-      } else if (response.data?.mensaje) {
-        setError(response.data.mensaje);
+      // *** CORRECCIÓN CLAVE 1: URL de la API ***
+      const response = await fetch('http://localhost:3001/api/auth/register', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre,
+          username,
+          contrasena, // *** CORRECCIÓN CLAVE 2: Usar 'contrasena' aquí ***
+          // El campo 'tipo' se maneja en el backend (se asigna 'cliente' por defecto)
+        }),
+      });
+
+      if (response.ok) {
+        // Registro exitoso, redirige al login
+        router.push('/login');
       } else {
-        setError('Error desconocido al registrar la cuenta.');
+        const errorData = await response.json();
+        setError(errorData.mensaje || 'Error en el registro. Por favor, inténtalo de nuevo.');
       }
-    } catch (err: any) {
-      console.error('Error al registrar la cuenta (dentro del try):', err);
-      setError(err?.response?.data?.mensaje || 'Error al registrar la cuenta.');
+    } catch (err) {
+      console.error('Error al conectar con el servidor:', err);
+      setError('No se pudo conectar con el servidor. Inténtalo de nuevo más tarde.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f0f0f0' }}>
-      <Card style={{ width: '400px' }}>
-        <h2>Crear Cuenta</h2>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="nombre">Nombre:</label>
-            <input type="text" id="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-          </div>
-          <div>
-            <label htmlFor="username">Usuario:</label>
-            <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-          </div>
-          <div>
-            <label htmlFor="password">Contraseña:</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          <div>
-            <label htmlFor="confirmPassword">Confirmar Contraseña:</label>
-            <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-          </div>
-          {error && <ErrorMessage message={error} />}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? <LoadingSpinner size="small" /> : 'Crear Cuenta'}
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Registrarse
+        </Typography>
+        <Box component="form" noValidate sx={{ mt: 1 }} onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="nombre"
+            label="Nombre Completo"
+            name="nombre"
+            autoComplete="name"
+            autoFocus
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="Nombre de Usuario"
+            name="username"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="contrasena" // *** CORRECCIÓN: Nombre del campo 'contrasena' en el frontend ***
+            label="Contraseña"
+            type="password"
+            id="contrasena" // *** CORRECCIÓN: ID para el campo de contraseña ***
+            autoComplete="new-password"
+            value={contrasena} // *** CORRECCIÓN: Usar el estado 'contrasena' ***
+            onChange={(e) => setContrasena(e.target.value)} // *** CORRECCIÓN: Actualizar el estado 'contrasena' ***
+          />
+          {error && (
+            <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
+              {error}
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse'}
           </Button>
-        </form>
-        {registrationSuccess && (
-          <div style={{ marginTop: '1rem', textAlign: 'center', color: 'green' }}>
-            Usuario creado exitosamente. Redirigiendo al login...
-          </div>
-        )}
-      </Card>
-    </div>
+          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/login" style={{ textDecoration: 'none' }}>
+              Inicia sesión aquí
+            </Link>
+          </Typography>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 
