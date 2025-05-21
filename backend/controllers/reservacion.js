@@ -1,14 +1,12 @@
-// backend/controllers/reservacion.js
-const Reservacion = require('../models/reservacion'); // Ruta correcta al modelo
-const Butaca = require('../models/butaca'); // Ruta correcta al modelo
-const Sala = require('../models/sala'); // Ruta correcta al modelo
-const QRCode = require('qrcode'); // Asegúrate de tener 'qrcode' instalado: npm install qrcode
-const { v4: uuidv4 } = require('uuid'); // Asegúrate de tener 'uuid' instalado: npm install uuid
+const Reservacion = require('../models/reservacion');
+const Butaca = require('../models/butaca'); 
+const Sala = require('../models/sala'); 
+const QRCode = require('qrcode'); 
+const { v4: uuidv4 } = require('uuid'); 
 
 const reservacionController = {
     async createReservacion(req, res) {
         try {
-            // usuario_id viene del payload del token (definido en authMiddleware.js)
             const usuario_id = req.user.id; 
 
             const {
@@ -21,7 +19,6 @@ const reservacionController = {
                 fecha_expiracion,
             } = req.body;
 
-            // --- Validaciones de entrada ---
             if (!usuario_id || !sala_id || !fecha || !butacas_seleccionadas || butacas_seleccionadas.length === 0 ||
                 !nombre_tarjeta || !numero_tarjeta || !cvv || !fecha_expiracion) {
                 return res.status(400).json({ mensaje: 'Datos de reserva incompletos.' });
@@ -32,7 +29,6 @@ const reservacionController = {
                 return res.status(404).json({ mensaje: 'Sala no encontrada.' });
             }
 
-            // Validar que la fecha esté en el rango permitido
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0); 
             const fechaReserva = new Date(fecha);
@@ -45,7 +41,6 @@ const reservacionController = {
                 return res.status(400).json({ mensaje: 'La fecha de reserva debe ser hoy o en los próximos 7 días.' });
             }
 
-            // --- Verificación de disponibilidad de butacas (¡Doble chequeo para evitar race conditions!) ---
             const todasLasButacasDeSala = await Butaca.findBySalaId(sala_id);
             const butacasFisicasMap = new Map(); 
             todasLasButacasDeSala.forEach(b => butacasFisicasMap.set(`${b.fila}-${b.columna}`, b.id));

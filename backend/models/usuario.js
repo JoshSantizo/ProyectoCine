@@ -1,6 +1,5 @@
-// backend/models/usuario.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Importa la instancia de Sequelize
+const sequelize = require('../config/db'); 
 
 const Usuario = sequelize.define('Usuario', {
     id: {
@@ -16,20 +15,20 @@ const Usuario = sequelize.define('Usuario', {
     username: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true // Asegura que los nombres de usuario sean únicos
+        unique: true 
     },
-    contrasena: { // Almacenará el hash de la contraseña
+    contrasena: {
         type: DataTypes.STRING, 
         allowNull: false
     },
-    tipo: { // Para el ENUM('cliente', 'administrador')
+    tipo: { 
         type: DataTypes.ENUM('cliente', 'administrador'),
         defaultValue: 'cliente',
         allowNull: false
     },
 }, {
-    tableName: 'usuario', // Mapea al nombre de tabla 'usuario' (singular)
-    timestamps: false     // Desactiva createdAt/updatedAt si tu tabla no los tiene
+    tableName: 'usuario', 
+    timestamps: false   
 });
 
-module.exports = Usuario; // Exporta el modelo Usuario
+module.exports = Usuario; 

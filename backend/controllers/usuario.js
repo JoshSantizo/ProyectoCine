@@ -1,9 +1,8 @@
-// backend/controllers/usuario.js
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt'); 
 const Usuario = require('../models/usuario'); 
 
-const JWT_SECRET = process.env.JWT_SECRET; // Asegúrate de que esto esté bien cargado desde .env
+const JWT_SECRET = process.env.JWT_SECRET; 
 
 const usuarioController = {
     // Función para el login de usuarios
@@ -11,7 +10,6 @@ const usuarioController = {
         const { username, contrasena } = req.body; 
 
         if (!username || !contrasena) {
-            // Este mensaje es para errores de entrada (body vacío), no para éxito
             return res.status(400).json({ mensaje: 'Usuario y contraseña son requeridos.' });
         }
 
@@ -31,12 +29,10 @@ const usuarioController = {
             // Generar el JWT
             const payload = {
                 id: user.id, 
-                username: user.nombre_usuario // O 'username' si así se llama en tu DB
+                username: user.nombre_usuario 
             };
             const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }); 
 
-            // ¡¡¡CAMBIO CLAVE AQUÍ!!!
-            // Solo devuelve el token en la respuesta exitosa
             res.status(200).json({ token }); 
 
         } catch (error) {
@@ -71,4 +67,4 @@ const usuarioController = {
     }
 };
 
-module.exports = usuarioController; // Asegúrate de que este exportación sea correcta
+module.exports = usuarioController; 

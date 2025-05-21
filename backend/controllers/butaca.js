@@ -1,14 +1,11 @@
-// src/controllers/butaca.js
 const Butaca = require('../models/butaca');
 const Reservacion = require('../models/reservacion');
-const Sala = require('../models/sala'); // Para obtener las dimensiones de la sala
+const Sala = require('../models/sala'); 
 
 const butaca = {
-  // Obtener el estado de las butacas para una sala y fecha específica
   async getButacasEstado(req, res) {
     try {
-      const { salaId, fecha } = req.params; // `fecha` en formato 'YYYY-MM-DD'
-      
+      const { salaId, fecha } = req.params;       
       if (!salaId || !fecha) {
         return res.status(400).json({ mensaje: 'ID de sala y fecha son requeridos.' });
       }
@@ -20,14 +17,14 @@ const butaca = {
 
       // Validar que la fecha esté dentro de los 8 días
       const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0); // Resetear a inicio del día
+      hoy.setHours(0, 0, 0, 0); 
       const fechaReserva = new Date(fecha);
-      fechaReserva.setHours(0, 0, 0, 0); // Resetear a inicio del día
+      fechaReserva.setHours(0, 0, 0, 0); 
       
       const diffTime = Math.abs(fechaReserva.getTime() - hoy.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (fechaReserva < hoy || diffDays > 7) { // 7 días desde hoy = 8 días incluyendo hoy
+      if (fechaReserva < hoy || diffDays > 7) { 
         return res.status(400).json({ mensaje: 'La fecha de reserva debe ser hoy o en los próximos 7 días.' });
       }
 
@@ -46,10 +43,7 @@ const butaca = {
           sala_id: butaca.sala_id,
           fila: butaca.fila,
           columna: butaca.columna,
-          // El estado 'reservado' se determina dinámicamente si existe una reserva para esa fecha
           estado: reservedKeys.has(key) ? 'reservado' : 'disponible',
-          // Puedes incluir el estado físico de la butaca también si es relevante
-          // estado_fisico: butaca.estado // Esto sería 'disponible' o 'fuera_de_servicio' etc.
         };
       });
 

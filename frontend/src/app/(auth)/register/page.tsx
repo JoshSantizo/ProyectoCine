@@ -1,4 +1,3 @@
-// src/app/(auth)/register/page.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -17,7 +16,7 @@ import Link from 'next/link';
 const RegisterPage = () => {
   const [nombre, setNombre] = useState('');
   const [username, setUsername] = useState('');
-  const [contrasena, setContrasena] = useState(''); // Cambiado de 'password' a 'contrasena' para consistencia
+  const [contrasena, setContrasena] = useState(''); 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -26,8 +25,7 @@ const RegisterPage = () => {
     setError('');
     setLoading(true);
     try {
-      // *** CORRECCIÓN CLAVE 1: URL de la API ***
-      const response = await fetch('http://localhost:3001/api/auth/register', { 
+      const response = await fetch('http://localhost:3001/auth/register', { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,13 +33,11 @@ const RegisterPage = () => {
         body: JSON.stringify({
           nombre,
           username,
-          contrasena, // *** CORRECCIÓN CLAVE 2: Usar 'contrasena' aquí ***
-          // El campo 'tipo' se maneja en el backend (se asigna 'cliente' por defecto)
+          contrasena, 
         }),
       });
 
       if (response.ok) {
-        // Registro exitoso, redirige al login
         router.push('/login');
       } else {
         const errorData = await response.json();
@@ -96,13 +92,13 @@ const RegisterPage = () => {
             margin="normal"
             required
             fullWidth
-            name="contrasena" // *** CORRECCIÓN: Nombre del campo 'contrasena' en el frontend ***
+            name="contrasena" 
             label="Contraseña"
             type="password"
-            id="contrasena" // *** CORRECCIÓN: ID para el campo de contraseña ***
+            id="contrasena" 
             autoComplete="new-password"
-            value={contrasena} // *** CORRECCIÓN: Usar el estado 'contrasena' ***
-            onChange={(e) => setContrasena(e.target.value)} // *** CORRECCIÓN: Actualizar el estado 'contrasena' ***
+            value={contrasena} 
+            onChange={(e) => setContrasena(e.target.value)} 
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
@@ -118,12 +114,7 @@ const RegisterPage = () => {
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Registrarse'}
           </Button>
-          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-            ¿Ya tienes una cuenta?{' '}
-            <Link href="/login" style={{ textDecoration: 'none' }}>
-              Inicia sesión aquí
-            </Link>
-          </Typography>
+
         </Box>
       </Box>
     </Container>

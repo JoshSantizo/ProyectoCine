@@ -1,33 +1,32 @@
-// backend/server.js (FRAGMENTO)
 const express = require('express');
-const cors = require('cors'); // Asegúrate de tener cors si tu frontend y backend están en diferentes puertos/dominios
-const dotenv = require('dotenv'); // Para cargar variables de entorno
+const cors = require('cors');
+const dotenv = require('dotenv');
 dotenv.config();
 
-// Importar la configuración de la base de datos (para asegurar la conexión)
-require('./config/db'); // Esto ejecuta la conexión a la DB al iniciar el servidor
-
-// Importar los modelos (para que Sequelize los registre)
+require('./config/db'); 
 require('./models/usuario');
 require('./models/pelicula');
-require('./models/sala'); // Asegúrate de que Sala y Pelicula estén importados para las relaciones
+require('./models/sala');
+require('./models/reservacion'); 
 
 // Importar las rutas
 const authRoutes = require('./routes/auth');
 const peliculaRoutes = require('./routes/pelicula');
-const salaRoutes = require('./routes/sala'); // <--- ¡VERIFICAR QUE APUNTE A 'sala' sin .js!
+const salaRoutes = require('./routes/sala');
+const reservacionRoutes = require('./routes/reservacion'); 
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(express.json()); // Para parsear el cuerpo de las peticiones en formato JSON
-app.use(cors()); // Habilita CORS para todas las rutas. Considera configuraciones más específicas en producción.
+app.use(express.json()); 
+app.use(cors()); 
 
 // Usar las rutas
 app.use('/auth', authRoutes);
 app.use('/peliculas', peliculaRoutes);
-app.use('/salas', salaRoutes); // <--- Usar las rutas bajo el prefijo /salas
+app.use('/salas', salaRoutes);
+app.use('/reservaciones', reservacionRoutes); 
 
 // Ruta de prueba
 app.get('/', (req, res) => {

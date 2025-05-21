@@ -1,5 +1,4 @@
-// backend/models/butaca.js
-const db = require('../config/db'); // Ruta correcta al archivo de conexión
+const db = require('../config/db');
 
 const Butaca = {
     async findBySalaId(salaId) {

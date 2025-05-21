@@ -1,11 +1,10 @@
-// backend/controllers/pelicula.js
-const Pelicula = require('../models/pelicula'); // Importa el modelo Pelicula de Sequelize
+const Pelicula = require('../models/pelicula'); 
 
 const peliculaController = {
     // Obtener todas las películas
     async getAllPeliculas(req, res) {
         try {
-            const peliculas = await Pelicula.findAll(); // Usa Sequelize
+            const peliculas = await Pelicula.findAll(); 
             res.status(200).json(peliculas);
         } catch (error) {
             console.error('Error al obtener películas:', error);
@@ -17,7 +16,7 @@ const peliculaController = {
     async getPeliculaById(req, res) {
         try {
             const { id } = req.params;
-            const pelicula = await Pelicula.findByPk(id); // Usa Sequelize
+            const pelicula = await Pelicula.findByPk(id); 
             if (!pelicula) {
                 return res.status(404).json({ mensaje: 'Película no encontrada.' });
             }
@@ -38,7 +37,6 @@ const peliculaController = {
                 return res.status(400).json({ mensaje: 'Todos los campos son obligatorios.' });
             }
             
-            // Crea la película usando el método 'create' de Sequelize
             const nuevaPelicula = await Pelicula.create({ nombre, sinopsis, duracion, imagen });
             
             res.status(201).json({ mensaje: 'Película creada exitosamente.', pelicula: nuevaPelicula });
@@ -61,7 +59,6 @@ const peliculaController = {
                 return res.status(404).json({ mensaje: 'Película no encontrada.' });
             }
 
-            // Actualiza los campos en memoria
             pelicula.nombre = nombre || pelicula.nombre; 
             pelicula.sinopsis = sinopsis || pelicula.sinopsis;
             pelicula.duracion = duracion !== undefined ? duracion : pelicula.duracion; 
@@ -82,10 +79,9 @@ const peliculaController = {
         try {
             const { id } = req.params;
             
-            // Elimina la película usando el método 'destroy'
             const resultado = await Pelicula.destroy({ where: { id } }); 
             
-            if (resultado === 0) { // 'resultado' es el número de filas eliminadas
+            if (resultado === 0) { 
                 return res.status(404).json({ mensaje: 'Película no encontrada.' });
             }
             res.status(200).json({ mensaje: 'Película eliminada exitosamente.' });

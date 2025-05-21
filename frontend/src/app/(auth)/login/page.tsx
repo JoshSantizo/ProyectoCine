@@ -1,27 +1,26 @@
-// src/app/(auth)/login/page.tsx
-'use client'; // Esto indica que el componente es un Client Component en Next.js 13+
+'use client'; 
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Para la navegación programática
+import { useRouter } from 'next/navigation'; 
 import {
     Container, Box, Typography, TextField, Button, Alert, CircularProgress, Link
 } from '@mui/material';
-import NextLink from 'next/link'; // Importar Link de next/link para usar con MUI Link
-import { useAuthContext } from '@/app/layout'; // Asegúrate de que esta ruta sea correcta
+import NextLink from 'next/link'; 
+import { useAuthContext } from '@/app/layout'; 
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [contrasena, setContrasena] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const router = useRouter(); // Inicializa el router
-    const { setToken, setUser } = useAuthContext(); // Obtener funciones del contexto de autenticación
+    const router = useRouter(); 
+    const { setToken, setUser } = useAuthContext(); 
 
     const handleLogin = async (event: React.FormEvent) => {
-        event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        event.preventDefault(); 
 
-        setError(null); // Limpiar errores previos
-        setLoading(true); // Indicar que la carga ha comenzado
+        setError(null); 
+        setLoading(true); 
 
         try {
             const response = await fetch('http://localhost:3001/auth/login', {
@@ -32,25 +31,21 @@ const LoginPage = () => {
                 body: JSON.stringify({ username, contrasena }),
             });
 
-            const data = await response.json(); // Parsear la respuesta JSON
+            const data = await response.json(); 
 
             if (!response.ok) {
-                // Si la respuesta no es OK (ej. 400, 401, 500), lanzar un error
                 throw new Error(data.mensaje || 'Error en el inicio de sesión');
             }
-
-            // Si el inicio de sesión es exitoso, guardar el token y la información del usuario
             setToken(data.token);
             setUser({ id: data.userId, username: data.username, tipo: data.tipo });
 
-            // Redirigir al dashboard o a la página principal
             router.push('/dashboard'); 
 
         } catch (err: any) {
             console.error('Error durante el inicio de sesión:', err);
             setError(err.message || 'Error desconocido al iniciar sesión.');
         } finally {
-            setLoading(false); // Indicar que la carga ha terminado
+            setLoading(false);
         }
     };
 
@@ -110,14 +105,6 @@ const LoginPage = () => {
                         {loading ? <CircularProgress size={24} /> : 'Iniciar Sesión'}
                     </Button>
                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                        <Typography variant="body2">
-                            ¿No tienes cuenta?{' '}
-                            <NextLink href="/register" passHref legacyBehavior>
-                                <Link component="a" variant="body2">
-                                    Regístrate aquí
-                                </Link>
-                            </NextLink>
-                        </Typography>
                     </Box>
                 </Box>
             </Box>

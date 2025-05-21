@@ -1,69 +1,61 @@
-// backend/models/reservacion.js
-const db = require('../config/db'); // Ruta correcta al archivo de conexión
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); 
 
-const Reservacion = {
-    async create({ usuario_id, sala_id, fecha, asientos, codigo_qr, nombre_tarjeta, numero_tarjeta, cvv, fecha_expiracion, estado = 'confirmado' }) {
-        const query = `
-            INSERT INTO reservacion 
-            (usuario_id, sala_id, fecha, asientos, codigo_qr, nombre_tarjeta, numero_tarjeta, cvv, fecha_expiracion, estado) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const [result] = await db.execute(query, [
-            usuario_id,
-            sala_id,
-            fecha, 
-            JSON.stringify(asientos), // Guardar los asientos como string JSON
-            codigo_qr,
-            nombre_tarjeta,
-            numero_tarjeta,
-            cvv,
-            fecha_expiracion, 
-            estado,
-        ]);
-        return { 
-            id: result.insertId, 
-            usuario_id, 
-            sala_id, 
-            fecha, 
-            asientos, 
-            codigo_qr, 
-            nombre_tarjeta, 
-            numero_tarjeta, 
-            cvv, 
-            fecha_expiracion, 
-            estado 
-        };
+const Reservacion = sequelize.define('Reservacion', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
     },
-
-    async findById(id) {
-        const query = 'SELECT * FROM reservacion WHERE id = ?';
-        const [rows] = await db.execute(query, [id]);
-        if (rows[0] && rows[0].asientos) {
-            rows[0].asientos = JSON.parse(rows[0].asientos); 
+    usuario_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Usuario', 
+            key: 'id'
         }
-        return rows[0] || null;
     },
+    sala_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Sala', 
+            key: 'id'
+        }
+    },
+    fecha: {
+        type: DataTypes.DATEONLY, 
+        allowNull: false
+    },
+    asientos: {
+        type: DataTypes.JSON,
+        allowNull: false
+    },
+    nombre_tarjeta: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    numero_tarjeta: {
+        type: DataTypes.STRING(16), 
+        allowNull: false
+    },
+    cvv: {
+        type: DataTypes.STRING(4), 
+        allowNull: false
+    },
+    fecha_expiracion: {
+        type: DataTypes.STRING(5),
+        allowNull: false
+    }
+}, {
+    tableName: 'reservacion', 
+    timestamps: false 
+});
 
-    async findConfirmedBySalaAndFecha(salaId, fecha) {
-        const query = `
-            SELECT r.asientos
-            FROM reservacion r
-            WHERE r.sala_id = ? AND r.fecha = ? AND r.estado = 'confirmado'
-        `;
-        const [rows] = await db.execute(query, [salaId, fecha]);
-        const allReservedButacas = [];
-        rows.forEach(row => {
-            if (row.asientos) {
-                try {
-                    const butacas = JSON.parse(row.asientos);
-                    allReservedButacas.push(...butacas);
-                } catch (e) {
-                    console.error("Error parsing asientos JSON:", row.asientos, e);
-                }
-            }
-        });
-        return allReservedButacas;
-    },
-};
+const Usuario = require('./usuario'); 
+const Sala = require('./sala'); 
+
+Reservacion.belongsTo(Usuario, { foreignKey: 'usuario_id' });
+Reservacion.belongsTo(Sala, { foreignKey: 'sala_id' });
 
 module.exports = Reservacion;

@@ -1,4 +1,3 @@
-// src/app/admin/peliculas/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -28,12 +27,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import Image from 'next/image';
 
-// Importar el hook de autenticación del contexto
+
 import { useAuthContext } from '@/app/layout';
 
 // Interfaz para el tipo de datos de una película
 interface Pelicula {
-    id?: number; // Es opcional porque no estará presente al crear una nueva
+    id?: number; 
     nombre: string;
     sinopsis: string;
     duracion: number;
@@ -41,7 +40,6 @@ interface Pelicula {
 }
 
 const AdminPeliculasPage = () => {
-    // Obtener el token del contexto de autenticación
     const { token } = useAuthContext();
 
     const [peliculas, setPeliculas] = useState<Pelicula[]>([]);
@@ -89,21 +87,19 @@ const AdminPeliculasPage = () => {
         }
     };
 
-    // Cargar películas al montar el componente y cuando el token esté disponible
     useEffect(() => {
         if (token) {
             fetchPeliculas();
         }
     }, [token]);
 
-    // Manejar la apertura del diálogo (para añadir o editar)
+
     const handleOpenDialog = (pelicula?: Pelicula) => {
         setCurrentPelicula(pelicula || null);
         setFormValues(pelicula || { nombre: '', sinopsis: '', duracion: 0, imagen: '' });
         setOpenDialog(true);
     };
 
-    // Manejar el cierre del diálogo
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setCurrentPelicula(null);
@@ -111,7 +107,6 @@ const AdminPeliculasPage = () => {
         setError(null);
     };
 
-    // Manejar cambios en el formulario
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormValues((prev) => ({
@@ -120,7 +115,6 @@ const AdminPeliculasPage = () => {
         }));
     };
 
-    // Manejar el envío del formulario (añadir o editar)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -154,7 +148,6 @@ const AdminPeliculasPage = () => {
         }
     };
 
-    // Manejar la eliminación de una película
     const handleDelete = async (id: number | undefined) => {
         if (!id || !confirm('¿Estás seguro de que quieres eliminar esta película?')) {
             return;
@@ -181,7 +174,6 @@ const AdminPeliculasPage = () => {
         }
     };
 
-    // Muestra un indicador de carga si no hay películas cargadas aún
     if (loading && peliculas.length === 0) {
         return (
             <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh', flexDirection: 'column' }}>
@@ -191,7 +183,6 @@ const AdminPeliculasPage = () => {
         );
     }
 
-    // Muestra un mensaje si hay un error y no hay token (por ejemplo, si no está logueado)
     if (error && !token) {
         return (
             <Container sx={{ mt: 4 }}>
@@ -232,12 +223,10 @@ const AdminPeliculasPage = () => {
                     <Table aria-label="tabla de películas">
                         <TableHead>
                             <TableRow>
-                                {/* Anchos fijos o mínimos para las columnas que no sean sinopsis */}
                                 <TableCell sx={{ width: '5%', minWidth: '50px' }}>ID</TableCell>
                                 <TableCell sx={{ width: '10%', minWidth: '80px' }}>Imagen</TableCell>
                                 <TableCell sx={{ width: '20%', minWidth: '150px' }}>Nombre</TableCell>
                                 <TableCell sx={{ width: '10%', minWidth: '80px' }}>Duración (min)</TableCell>
-                                {/* La sinopsis ocupará el espacio restante y se truncará */}
                                 <TableCell sx={{ width: 'auto' }}>Sinopsis</TableCell>
                                 <TableCell sx={{ width: '15%', minWidth: '100px' }} align="right">Acciones</TableCell>
                             </TableRow>
@@ -259,9 +248,8 @@ const AdminPeliculasPage = () => {
                                     </TableCell>
                                     <TableCell>{pelicula.nombre}</TableCell>
                                     <TableCell>{pelicula.duracion}</TableCell>
-                                    {/* Propiedades CSS para truncar la sinopsis */}
                                     <TableCell sx={{
-                                        maxWidth: '400px', // Puedes ajustar este valor si quieres un límite mayor o menor
+                                        maxWidth: '400px', 
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap'
@@ -283,7 +271,6 @@ const AdminPeliculasPage = () => {
                 </TableContainer>
             )}
 
-            {/* Diálogo de Añadir/Editar Película (se mantiene sin cambios) */}
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>{currentPelicula ? 'Editar Película' : 'Añadir Nueva Película'}</DialogTitle>
                 <DialogContent>

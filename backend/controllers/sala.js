@@ -1,6 +1,5 @@
-// backend/controllers/sala.js
-const Sala = require('../models/sala');     // Importa el modelo Sala de Sequelize
-const Pelicula = require('../models/pelicula'); // También necesitamos el modelo Pelicula para las inclusiones
+const Sala = require('../models/sala');    
+const Pelicula = require('../models/pelicula'); 
 
 const salaController = {
     // Obtener todas las salas con su película asociada
@@ -9,9 +8,9 @@ const salaController = {
             const salas = await Sala.findAll({
                 include: [
                     {
-                        model: Pelicula, // Incluye el modelo Pelicula
-                        as: 'pelicula', // Usa el alias 'pelicula' definido en la asociación (Sala.belongsTo)
-                        attributes: ['id', 'nombre', 'duracion', 'sinopsis', 'imagen'] // Selecciona solo los campos que necesitas de la película
+                        model: Pelicula, 
+                        as: 'pelicula', 
+                        attributes: ['id', 'nombre', 'duracion', 'sinopsis', 'imagen'] 
                     }
                 ]
             });
@@ -82,9 +81,8 @@ const salaController = {
                 return res.status(404).json({ mensaje: 'Sala no encontrada.' });
             }
 
-            // Opcional: Validar si la pelicula_id existe si se proporciona o si se desasigna (null)
             if (pelicula_id !== undefined) {
-                if (pelicula_id !== null) { // Si no es null, debe existir
+                if (pelicula_id !== null) { 
                     const pelicula = await Pelicula.findByPk(pelicula_id);
                     if (!pelicula) {
                         return res.status(400).json({ mensaje: 'La película especificada no existe.' });

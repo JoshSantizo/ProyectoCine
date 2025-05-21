@@ -1,4 +1,3 @@
-// src/hooks/useAuth.tsx
 import { useState, useEffect, useCallback } from 'react'; 
 import { useRouter } from 'next/navigation';
 
@@ -10,8 +9,6 @@ const useAuth = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(!!initialToken); 
 
     const router = useRouter();
-
-    // --- Definición de funciones de autenticación (useCallback) primero ---
 
     const login = useCallback(async (username: string, contrasena: string) => { 
         try {
@@ -65,7 +62,6 @@ const useAuth = () => {
         }
     }, []);
 
-    // La función logout se define ANTES del useEffect que la usa
     const logout = useCallback(() => {
         localStorage.removeItem('authToken'); 
         setToken(null); 
@@ -73,24 +69,9 @@ const useAuth = () => {
         router.push('/login');
     }, [router]);
 
-    // --- Ahora el useEffect puede usar 'logout' sin problemas ---
+
     useEffect(() => {
-        // Podrías añadir aquí lógica para verificar la validez/expiración del token
-        // si usas jwt-decode. Si el token es inválido/expirado, llamas a logout().
-        // Ejemplo (requiere jwt-decode):
-        // if (token) {
-        //     try {
-        //         const decodedToken: any = jwtDecode(token);
-        //         if (decodedToken.exp * 1000 < Date.now()) { // Token expirado
-        //             console.log('Token expirado. Cerrando sesión automáticamente.');
-        //             logout(); // Cierra sesión si el token está expirado
-        //         }
-        //     } catch (error) {
-        //         console.error('Error decodificando token:', error);
-        //         logout(); // Cierra sesión si el token es inválido
-        //     }
-        // }
-    }, [token, logout]); // 'logout' ahora está definida cuando se evalúa esta línea
+    }, [token, logout]);
 
 
     return { isLoggedIn, login, logout, token, register };

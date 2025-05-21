@@ -1,6 +1,5 @@
-// backend/models/pelicula.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Importa la instancia de Sequelize
+const sequelize = require('../config/db'); 
 
 const Pelicula = sequelize.define('Pelicula', {
     id: {
@@ -14,7 +13,7 @@ const Pelicula = sequelize.define('Pelicula', {
         allowNull: false
     },
     sinopsis: {
-        type: DataTypes.TEXT, // Usamos TEXT para sinopsis que puede ser larga
+        type: DataTypes.TEXT,
         allowNull: false
     },
     duracion: {
@@ -22,12 +21,12 @@ const Pelicula = sequelize.define('Pelicula', {
         allowNull: false
     },
     imagen: {
-        type: DataTypes.STRING, // VARCHAR para la URL de la imagen
+        type: DataTypes.STRING, 
         allowNull: false
     },
 }, {
-    tableName: 'pelicula', // Mapea al nombre de tabla 'pelicula' (singular)
-    timestamps: false     // Desactiva createdAt/updatedAt si tu tabla no los tiene
+    tableName: 'pelicula', 
+    timestamps: false    
 });
 
-module.exports = Pelicula; // Exporta el modelo Pelicula
+module.exports = Pelicula;

@@ -1,15 +1,13 @@
-// src/app/layout.tsx
 'use client';
 
 import { Inter } from 'next/font/google';
-// ¡CAMBIO AQUÍ! La ruta de importación a globals.css
-import '@/styles/globals.css'; // Apunta a src/styles/globals.css
+import '@/styles/globals.css'; 
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AppBar, Toolbar, IconButton, Typography, Box, CssBaseline, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Sidebar from '@/components/Sidebar'; // Importa tu componente Sidebar
-import { useRouter } from 'next/navigation'; // Importa useRouter para la navegación
+import Sidebar from '@/components/Sidebar'; 
+import { useRouter } from 'next/navigation'; 
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,7 +18,6 @@ interface User {
   tipo: 'cliente' | 'administrador';
 }
 
-// Define la interfaz para el contexto de autenticación
 interface AuthContextType {
   token: string | null;
   user: User | null;
@@ -32,10 +29,8 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
 }
 
-// Crea el contexto de autenticación
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hook personalizado para usar el contexto de autenticación
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -44,18 +39,15 @@ export const useAuthContext = () => {
   return context;
 };
 
-// Proveedor de contexto de autenticación
 export function AuthContextProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false); // Estado para el drawer móvil
-  const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false); 
 
   // URL base de tu API backend
   const API_BASE_URL = 'http://localhost:3001';
 
-  // Efecto para cargar el token y el usuario desde localStorage al inicio
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
@@ -66,12 +58,12 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
         setIsLoggedIn(true);
       } catch (e) {
         console.error("Error parsing stored user data:", e);
-        logout(); // Limpiar si los datos están corruptos
+        logout(); 
       }
     }
   }, []);
 
-  // Efecto para actualizar localStorage cada vez que el token o el usuario cambian
+ 
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
@@ -83,7 +75,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     } else {
       localStorage.removeItem('user');
     }
-    setIsLoggedIn(!!token); // Actualiza isLoggedIn basado en la presencia del token
+    setIsLoggedIn(!!token); 
   }, [token, user]);
 
   // Función de login
@@ -104,7 +96,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Error de login:', error);
-      throw error; // Propagar el error para que el componente de login lo maneje
+      throw error; 
     }
   }, [API_BASE_URL, router]);
 
@@ -120,10 +112,9 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
       if (!response.ok) {
         throw new Error(data.mensaje || 'Error en el registro');
       }
-      // Después de registrar, puedes iniciar sesión automáticamente o redirigir al login
-      // Para este ejemplo, simplemente indicamos éxito y el usuario puede ir al login
+
       console.log('Registro exitoso:', data.mensaje);
-      router.push('/login'); // Redirigir al login después de un registro exitoso
+      router.push('/login'); 
     } catch (error: any) {
       console.error('Error de registro:', error);
       throw error;
@@ -137,7 +128,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     setIsLoggedIn(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    router.push('/login'); // Redirigir al login después de cerrar sesión
+    router.push('/login'); 
   }, [router]);
 
   const handleDrawerToggle = () => {
@@ -155,7 +146,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
               sx={{
                 width: { sm: `calc(100% - 240px)` },
                 ml: { sm: `240px` },
-                backgroundColor: '#333', // Color oscuro para AppBar
+                backgroundColor: '#333', 
                 color: 'white',
               }}
             >
@@ -172,7 +163,6 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
                 <Typography variant="h6" noWrap component="div">
                   Cine Online
                 </Typography>
-                {/* Aquí puedes añadir más elementos a la AppBar si lo deseas */}
               </Toolbar>
             </AppBar>
             <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
@@ -180,7 +170,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
               component="main"
               sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - 240px)` } }}
             >
-              <Toolbar /> {/* Para compensar la AppBar fija */}
+              <Toolbar />
               {children}
             </Box>
           </Box>

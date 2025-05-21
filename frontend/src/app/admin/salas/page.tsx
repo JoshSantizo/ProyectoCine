@@ -1,11 +1,10 @@
-// src/app/admin/salas/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
     Container, Typography, Box, Button,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, // Componentes de tabla
-    IconButton, // Para los botones de lápiz y basura
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
+    IconButton,
     TextField,
     Dialog, DialogActions, DialogContent, DialogTitle,
     Alert, CircularProgress, Select, MenuItem, InputLabel, FormControl
@@ -13,14 +12,13 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
-import { useAuthContext } from '@/app/layout'; // Ajusta la ruta si es diferente
+import { useAuthContext } from '@/app/layout'; 
 import { useRouter } from 'next/navigation';
 
-// Interfaces de datos (deben coincidir con la respuesta del backend)
+
 interface Pelicula {
     id: number;
     nombre: string;
-    // Agrega más campos de película si son relevantes para mostrar aquí
 }
 
 interface Sala {
@@ -29,7 +27,7 @@ interface Sala {
     filas: number;
     columnas: number;
     pelicula_id: number | null;
-    pelicula?: Pelicula; // Opcional, ya que puede ser null o no venir en todas las llamadas
+    pelicula?: Pelicula; 
 }
 
 const AdminSalasPage = () => {
@@ -37,26 +35,25 @@ const AdminSalasPage = () => {
     const router = useRouter();
 
     const [salas, setSalas] = useState<Sala[]>([]);
-    const [peliculas, setPeliculas] = useState<Pelicula[]>([]); // Para el selector de películas
+    const [peliculas, setPeliculas] = useState<Pelicula[]>([]); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    // Estado para el modal de Crear/Editar
+ 
     const [openDialog, setOpenDialog] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [currentSala, setCurrentSala] = useState<Partial<Sala> | null>(null); // Sala que se está editando/creando
+    const [currentSala, setCurrentSala] = useState<Partial<Sala> | null>(null); 
 
-    // Formulario (controlado)
+
     const [formNombre, setFormNombre] = useState('');
     const [formFilas, setFormFilas] = useState<number | ''>('');
     const [formColumnas, setFormColumnas] = useState<number | ''>('');
-    const [formPeliculaId, setFormPeliculaId] = useState<number | ''>(''); // Usar '' para "no asignada"
+    const [formPeliculaId, setFormPeliculaId] = useState<number | ''>(''); 
 
-    // Redireccionar si no es administrador
     useEffect(() => {
         if (!loading && (!user || user.tipo !== 'administrador')) {
-            router.push('/dashboard'); // O a una página de acceso denegado
+            router.push('/dashboard'); 
         }
     }, [loading, user, router]);
 
@@ -65,7 +62,6 @@ const AdminSalasPage = () => {
         setLoading(true);
         setError(null);
         try {
-            // Fetch de Salas
             const salasResponse = await fetch('http://localhost:3001/salas', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -75,7 +71,6 @@ const AdminSalasPage = () => {
             const salasData: Sala[] = await salasResponse.json();
             setSalas(salasData);
 
-            // Fetch de Películas (para el selector)
             const peliculasResponse = await fetch('http://localhost:3001/peliculas', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -100,16 +95,16 @@ const AdminSalasPage = () => {
             setLoading(false);
             setError('No hay token de autenticación. Inicia sesión como administrador.');
         }
-    }, [token, user]); // Dependencias para el useEffect
+    }, [token, user]); 
 
-    // --- Manejo del Diálogo (Modal) ---
+  
     const handleOpenCreate = () => {
         setIsEditing(false);
         setCurrentSala(null);
         setFormNombre('');
         setFormFilas('');
         setFormColumnas('');
-        setFormPeliculaId(''); // Resetea a "no asignada"
+        setFormPeliculaId(''); 
         setOpenDialog(true);
     };
 
@@ -119,17 +114,17 @@ const AdminSalasPage = () => {
         setFormNombre(sala.nombre);
         setFormFilas(sala.filas);
         setFormColumnas(sala.columnas);
-        setFormPeliculaId(sala.pelicula_id || ''); // Si es null, usa ''
+        setFormPeliculaId(sala.pelicula_id || ''); 
         setOpenDialog(true);
     };
 
     const handleCloseDialog = () => {
         setOpenDialog(false);
-        setError(null); // Limpiar errores del formulario al cerrar
-        setSuccessMessage(null); // Limpiar mensajes de éxito
+        setError(null);
+        setSuccessMessage(null); 
     };
 
-    // --- Manejo del Formulario (Guardar) ---
+    // --- Formulario Guardar ---
     const handleSaveSala = async () => {
         if (!token) {
             setError('No autenticado.');
@@ -144,7 +139,6 @@ const AdminSalasPage = () => {
             nombre: formNombre,
             filas: Number(formFilas),
             columnas: Number(formColumnas),
-            // Si formPeliculaId es '', enviamos null; de lo contrario, el número
             pelicula_id: formPeliculaId === '' ? null : Number(formPeliculaId)
         };
 
@@ -177,7 +171,7 @@ const AdminSalasPage = () => {
 
             setSuccessMessage(isEditing ? 'Sala actualizada con éxito.' : 'Sala creada con éxito.');
             handleCloseDialog();
-            fetchSalasAndPeliculas(); // Volver a cargar las salas
+            fetchSalasAndPeliculas();
         } catch (err: any) {
             console.error('Error al guardar sala:', err);
             setError(err.message || 'Error desconocido al guardar la sala.');
@@ -207,7 +201,7 @@ const AdminSalasPage = () => {
             }
 
             setSuccessMessage('Sala eliminada con éxito.');
-            fetchSalasAndPeliculas(); // Volver a cargar las salas
+            fetchSalasAndPeliculas(); 
         } catch (err: any) {
             console.error('Error al eliminar sala:', err);
             setError(err.message || 'Error desconocido al eliminar la sala.');
@@ -231,13 +225,12 @@ const AdminSalasPage = () => {
         );
     }
 
-    // Si el usuario no es admin y ya terminó de cargar, redirigir
     if (user && user.tipo !== 'administrador') {
-        return null; // El useEffect ya se encarga de la redirección
+        return null; 
     }
 
     return (
-        <Container sx={{ mt: 4, mb: 4 }} maxWidth={false}> {/* ¡Container a full width! */}
+        <Container sx={{ mt: 4, mb: 4 }} maxWidth={false}> 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" component="h1">
                     Administración de Salas
@@ -258,19 +251,16 @@ const AdminSalasPage = () => {
             {salas.length === 0 ? (
                 <Typography>No hay salas registradas.</Typography>
             ) : (
-                <TableContainer component={Paper}> {/* Contenedor de la tabla */}
+                <TableContainer component={Paper}> 
                     <Table aria-label="tabla de salas">
                         <TableHead>
                             <TableRow>
-                                {/* Celdas de encabezado con anchos controlados */}
                                 <TableCell sx={{ width: '5%', minWidth: '50px' }}>ID</TableCell>
                                 <TableCell sx={{ width: '20%', minWidth: '150px' }}>Nombre</TableCell>
                                 <TableCell sx={{ width: '15%', minWidth: '100px' }}>Filas</TableCell>
                                 <TableCell sx={{ width: '15%', minWidth: '100px' }}>Columnas</TableCell>
                                 <TableCell sx={{ width: '15%', minWidth: '120px' }}>Capacidad</TableCell>
-                                {/* Película asignada: tomará el espacio restante */}
                                 <TableCell sx={{ width: 'auto' }}>Película Asignada</TableCell>
-                                {/* Acciones al final con un ancho fijo */}
                                 <TableCell sx={{ width: '15%', minWidth: '100px' }} align="right">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
@@ -286,7 +276,6 @@ const AdminSalasPage = () => {
                                         {sala.pelicula?.nombre || 'Ninguna'}
                                     </TableCell>
                                     <TableCell align="right">
-                                        {/* Botones de acción (lápiz y basura) */}
                                         <IconButton color="primary" onClick={() => handleOpenEdit(sala)}>
                                             <EditIcon />
                                         </IconButton>
@@ -301,7 +290,6 @@ const AdminSalasPage = () => {
                 </TableContainer>
             )}
 
-            {/* Diálogo de Crear/Editar Sala (se mantiene sin cambios) */}
             <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
                 <DialogTitle>{isEditing ? 'Editar Sala' : 'Crear Nueva Sala'}</DialogTitle>
                 <DialogContent>
@@ -354,7 +342,6 @@ const AdminSalasPage = () => {
                             <MenuItem value="">
                                 <em>Ninguna (Desasignar)</em>
                             </MenuItem>
-                            {/* Asegúrate de que `peliculas` esté cargado para que esto funcione */}
                             {peliculas.map((pelicula) => (
                                 <MenuItem key={pelicula.id} value={pelicula.id}>
                                     {pelicula.nombre}
